@@ -1,0 +1,45 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    build: .
+    command: ["uvicorn", "project_chaac.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    environment:
+      # override the localhost default — point at the rabbitmq service by name
+      BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      API_KEY: "dev-secret-key"
+      # api sees the docker network IP, not localhost — see note below
+      ALLOWED_IPS: "127.0.0.1,::1,testclient,192.168.65.1"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ["celery", "-A", "project_chaac.celery_app", "worker", "--loglevel=info"]
+    environment:
+      BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  rabbitmq_data:
