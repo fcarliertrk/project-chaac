@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     api_key: str = "dev-secret-key"
     # comma-separated in env; parsed to a list below
     allowed_ips: str = "127.0.0.1,::1,testclient"
+    result_backend: str = "redis://localhost:6379/0"
+
 
 
 # single shared instance — import this everywhere, never construct Settings() again

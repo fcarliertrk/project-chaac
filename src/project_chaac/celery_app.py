@@ -5,8 +5,8 @@ from project_chaac.config import settings
 celery = Celery(
     "project_chaac",
     broker=settings.broker_url,
-    include=["project_chaac.tasks"],  # explicit registration — imported at worker startup
-    # no `backend=` — we're skipping the result backend for v1
+    backend=settings.result_backend,   # <-- now set
+    include=["project_chaac.tasks"],
 )
 
 celery.conf.update(
@@ -15,4 +15,5 @@ celery.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    result_expires=3600,   # results auto-expire after 1h (see note)
 )

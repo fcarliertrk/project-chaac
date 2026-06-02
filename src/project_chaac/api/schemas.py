@@ -13,3 +13,8 @@ class JobRequest(BaseModel):
 class JobAccepted(BaseModel):
     task_id: str
     status: str = "accepted"
+
+class JobResult(BaseModel):
+    task_id: str
+    status: str            # PENDING, STARTED, SUCCESS, FAILURE, etc.
+    result: dict | None = None
